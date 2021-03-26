@@ -532,7 +532,13 @@ endif()
 # If Linux, check LSB_RELEASE globally so we can use it after
 # But also infer the new E+ package names (starting at 9.4.0)
 if(APPLE)
-  set(ENERGYPLUS_SYSTEM_VERSION "-macOS10.15")
+
+  find_program(UNAME uname)
+  execute_process(COMMAND ${UNAME} -m
+    OUTPUT_VARIABLE ARCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
 elseif(UNIX)
   # OS_RELEASE is the result of `uname -r` which is unhelpful (eg '5.4.0-42-generic')
   find_program(LSB_RELEASE lsb_release)
@@ -562,8 +568,13 @@ endif()
 
 if(UNIX)
   if(APPLE)
-    set(ENERGYPLUS_EXPECTED_HASH 0bf64f4b153a87c3a4822321bc5878e1)
-    set(ENERGYPLUS_PLATFORM "Darwin${ENERGYPLUS_SYSTEM_VERSION}-x86_64")
+    if (ARCH MATCHES "arm64")
+      set(ENERGYPLUS_EXPECTED_HASH 8772897d67d5ee0eb2e3d26c9474acb1)
+      set(ENERGYPLUS_PLATFORM "Darwin-macOS11.2-arm64")
+    else()
+      set(ENERGYPLUS_EXPECTED_HASH 0bf64f4b153a87c3a4822321bc5878e1)
+      set(ENERGYPLUS_PLATFORM "Darwin-macOS10.15-x86_64")
+    endif()
   elseif(EXISTS "/etc/redhat-release")
     # TODO: There aren't any redhat releases anymore, see PR #3145 too
     set(ENERGYPLUS_EXPECTED_HASH DOES_NOT_EXIST_02ed618aab65bf46c96bf1faf2e1905b)
@@ -748,8 +759,13 @@ if(BUILD_CLI)
   # need to  update the MD5sum for each platform and url below
   if(UNIX)
      if(APPLE)
-       set(OPENSTUDIO_GEMS_ZIP_FILENAME "openstudio3-gems-20210216-darwin.tar.gz")
-       set(OPENSTUDIO_GEMS_ZIP_EXPECTED_MD5 "9f5c1d508324088a88c62f4daf5ae336")
+       if (ARCH MATCHES arm64)
+         set(OPENSTUDIO_GEMS_ZIP_FILENAME "openstudio3-gems-20210326-darwin.tar.gz")
+         set(OPENSTUDIO_GEMS_ZIP_EXPECTED_MD5 "b175ad92de4a16929da4e034437ebf84")
+       else()
+         set(OPENSTUDIO_GEMS_ZIP_FILENAME "openstudio3-gems-20210216-darwin.tar.gz")
+         set(OPENSTUDIO_GEMS_ZIP_EXPECTED_MD5 "9f5c1d508324088a88c62f4daf5ae336")
+       endif()
      else()
        set(OPENSTUDIO_GEMS_ZIP_FILENAME "openstudio3-gems-20210216-linux.tar.gz")
        set(OPENSTUDIO_GEMS_ZIP_EXPECTED_MD5 "02273eb2a14679919de836f0c3fa77c8")
